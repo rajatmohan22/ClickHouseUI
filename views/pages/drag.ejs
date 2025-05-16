@@ -1,0 +1,84 @@
+<%- include('../partials/header') %>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <%- include('../partials/nav') %>
+
+      <!-- Main Content -->
+      <main class="col ms-sm-auto px-4">
+        <div class="d-flex"> <!-- Flex Container -->
+
+          <!-- Component Sidebar -->
+          <div id="components" class="p-3 mt-4 bg-light shadow-sm" style="width: 260px;">
+            <h5 class="mb-3">Components</h5>
+
+            <!-- Custom Inputs -->
+            <div class="mb-4">
+              <h6 class="text-secondary mb-2">Custom Inputs</h6>
+              <div class="d-grid gap-2">
+                <button draggable="true" class="btn btn-outline-dark btn-sm text-start" data-type="button">Button</button>
+                <button draggable="true" class="btn btn-outline-dark btn-sm text-start" data-type="input">Input</button>
+                <button draggable="true" class="btn btn-outline-dark btn-sm text-start" data-type="label">Label</button>
+              </div>
+            </div>
+
+            <!-- Predefined Operations -->
+            <div class="mb-4">
+              <h6 class="text-secondary mb-2">Predefined Operations</h6>
+              <div class="accordion" id="predefAccordion">
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingCreate">
+                    <button draggable="true" data-type="create" class="accordion-button p-2 draggable-item" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCreate" aria-expanded="true" aria-controls="collapseCreate">
+                      <span class="text-success">Create Object</span>
+                    </button>
+                  </h2>
+                  <div id="collapseCreate" class="accordion-collapse collapse show" aria-labelledby="headingCreate" data-bs-parent="#predefAccordion">
+                    <div class="accordion-body py-1">
+                      <button draggable="true" class="btn btn-outline-info btn-sm w-100 text-start" data-type="insert">Insert Items</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-grid gap-2 mt-2">
+                <button draggable="true" class="btn btn-outline-primary btn-sm text-start" data-type="read">Read Data</button>
+                <button draggable="true" class="btn btn-outline-warning btn-sm text-start" data-type="update">Update Object</button>
+                <button draggable="true" class="btn btn-outline-danger btn-sm text-start" data-type="delete">Delete Object</button>
+              </div>
+            </div>
+
+            <!-- Charts -->
+            <div>
+              <h6 class="text-secondary mb-2">Charts</h6>
+              <div class="d-grid gap-2">
+                <button draggable="true" class="btn btn-outline-secondary btn-sm text-start" data-type="barchart">Bar Chart</button>
+                <button draggable="true" class="btn btn-outline-secondary btn-sm text-start" data-type="piechart">Pie Chart</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas -->
+          <div id="canvas" class="flex-grow-1 p-3 mt-4 bg-white position-relative" style="min-height: 500px; border: 2px dashed #6c757d;">
+            <div class="position-absolute top-0 end-0 mt-2 me-2 d-flex gap-2">
+  <button id="undo-btn" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" title="Undo">
+    <i class="bi-arrow-counterclockwise fs-4"></i>
+    <span>Undo</span>
+  </button>
+  <button id="clear-btn" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" title="Clear Canvas">
+    <i class="bi-trash fs-4"></i>
+    <span>Clear</span>
+  </button>
+</div>
+            <p class="text-muted">Drag components here</p>
+            <div id="output" class="mt-4 p-3 border rounded" style="max-height: 300px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+  <script src="../../public/drag.js"></script>
+</body>
