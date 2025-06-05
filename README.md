@@ -42,7 +42,7 @@ A web application built with a Node.js backend and a frontend using Vanilla Java
 
    ```bash
    git clone https://github/rajatmohan22/ClickHouseUI
-   cd <repository-directory>
+   cd ClickHouseUI
    ```
 
 2. **Run Docker Compose**:
