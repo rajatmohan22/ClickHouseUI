@@ -1,11 +1,26 @@
 <nav class="col-md-3 col-lg-2 d-md-block sidebar">
-    <div class="logo">ClickHouse UI</div>
-    <ul class="nav flex-column">
-        <li class="nav-item">
-          <a class="nav-link <%= activePage === 'home' ? 'active text-primary fw-bold' : '' %>" href="/">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link <%= activePage === 'drag' ? 'active text-primary fw-bold' : '' %>" href="/drag">Drag & Drop</a>
-        </li>
-      </ul>
-  </nav>
+  <div class="logo">ClickHouse UI</div>
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <a
+        class="nav-link <%= activePage === 'home' ? 'active text-primary fw-bold' : '' %>"
+        href="/"
+        >Home</a
+      >
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link <%= activePage === 'drag' ? 'active text-primary fw-bold' : '' %>"
+        href="/drag"
+        >Drag & Drop</a
+      >
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link <%= activePage === 'parameter' ? 'active text-primary fw-bold' : '' %>"
+        href="/parameter"
+        >Paramterised Queries</a
+      >
+    </li>
+  </ul>
+</nav>

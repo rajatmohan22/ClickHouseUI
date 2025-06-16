@@ -5,7 +5,7 @@ const sendQueryToBackend = async (query) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query })
+      body: JSON.stringify({ query }),
     });
 
     const text = await res.text();
@@ -52,7 +52,9 @@ const sendQueryToBackend = async (query) => {
       outputDiv.innerHTML = `<pre>${text}</pre>`;
     }
   } catch (err) {
-    document.getElementById("output").innerHTML = `<div class="text-danger">Request failed: ${err.message}</div>`;
+    document.getElementById(
+      "output"
+    ).innerHTML = `<div class="text-danger">Request failed: ${err.message}</div>`;
   }
 };
 
@@ -66,7 +68,7 @@ const canvas = document.getElementById("canvas");
 const undoStack = [];
 
 canvas.addEventListener("dragover", (e) => e.preventDefault());
-canvas.addEventListener("drop", async(e) => {
+canvas.addEventListener("drop", async (e) => {
   e.preventDefault();
   const type = e.dataTransfer.getData("component");
   const wrapper = document.createElement("div");
@@ -85,7 +87,7 @@ canvas.addEventListener("drop", async(e) => {
 
     const kind = document.createElement("select");
     kind.className = "form-select mb-2";
-    ["Database", "Table", "View", "Materialized View"].forEach(opt => {
+    ["Database", "Table", "View", "Materialized View"].forEach((opt) => {
       const option = document.createElement("option");
       option.value = opt;
       option.textContent = opt;
@@ -136,7 +138,15 @@ canvas.addEventListener("drop", async(e) => {
 
           const typeSelect = document.createElement("select");
           typeSelect.className = "form-select";
-          ["UInt32", "String", "Int64", "Float32", "Date", "DateTime", "UUID"].forEach(dt => {
+          [
+            "UInt32",
+            "String",
+            "Int64",
+            "Float32",
+            "Date",
+            "DateTime",
+            "UUID",
+          ].forEach((dt) => {
             const opt = document.createElement("option");
             opt.value = dt;
             opt.textContent = dt;
@@ -167,16 +177,20 @@ canvas.addEventListener("drop", async(e) => {
           const orderBy = orderByInput.value.trim() || "tuple()";
           if (!table || !db) return alert("Missing table or db name");
 
-          const columns = Array.from(attrContainer.children).map(row => {
-            const inputs = row.querySelectorAll("input, select");
-            const colName = inputs[0].value.trim();
-            const colType = inputs[1].value.trim();
-            return colName && colType ? `${colName} ${colType}` : null;
-          }).filter(Boolean);
+          const columns = Array.from(attrContainer.children)
+            .map((row) => {
+              const inputs = row.querySelectorAll("input, select");
+              const colName = inputs[0].value.trim();
+              const colType = inputs[1].value.trim();
+              return colName && colType ? `${colName} ${colType}` : null;
+            })
+            .filter(Boolean);
 
           if (!columns.length) return alert("Add columns");
 
-          const query = `CREATE TABLE ${db}.${table} (${columns.join(", ")}) ENGINE = ${engine} ORDER BY ${orderBy}`;
+          const query = `CREATE TABLE ${db}.${table} (${columns.join(
+            ", "
+          )}) ENGINE = ${engine} ORDER BY ${orderBy}`;
           sendQueryToBackend(query);
         };
         dynamicArea.appendChild(runBtn);
@@ -203,12 +217,12 @@ canvas.addEventListener("drop", async(e) => {
         // };
         // insertSection.appendChild(insertBtn);
         // dynamicArea.appendChild(insertSection);
-
-      } if (type === "Database") {
+      }
+      if (type === "Database") {
         const runBtn = document.createElement("button");
         runBtn.textContent = "Create Database";
         runBtn.className = "btn btn-sm btn-outline-success";
-        runBtn.onclick = async e => {
+        runBtn.onclick = async (e) => {
           e.preventDefault();
           const dbName = nameInput.value.trim();
           if (!dbName) return alert("Missing database name");
@@ -220,7 +234,7 @@ canvas.addEventListener("drop", async(e) => {
           dynamicArea.appendChild(msg);
         };
         dynamicArea.appendChild(runBtn);
-      }else if (type === "View" || type === "Materialized View") {
+      } else if (type === "View" || type === "Materialized View") {
         const queryInput = document.createElement("textarea");
         queryInput.className = "form-control mb-2";
         queryInput.placeholder = "SELECT query for view";
@@ -239,86 +253,84 @@ canvas.addEventListener("drop", async(e) => {
         };
         dynamicArea.appendChild(runBtn);
       }
-
-      
     }
   } else if (type === "insert") {
     // 1) Title
     const title = document.createElement("h5");
     title.textContent = "Insert Rows";
     wrapper.appendChild(title);
-  
+
     // 2) Database selector
     const dbSelect = document.createElement("select");
     dbSelect.className = "form-select mb-2";
     wrapper.appendChild(dbSelect);
-  
+
     // 3) Table selector (disabled until a DB is picked)
     const tableSelect = document.createElement("select");
     tableSelect.className = "form-select mb-2";
     tableSelect.disabled = true;
     wrapper.appendChild(tableSelect);
-  
+
     // 4) JSON input (disabled until table is picked)
     const jsonArea = document.createElement("textarea");
     jsonArea.className = "form-control mb-2";
     jsonArea.placeholder = `[{"col1":1,"col2":"foo"}, {"col1":2,"col2":"bar"}]`;
     jsonArea.disabled = true;
     wrapper.appendChild(jsonArea);
-  
+
     // 5) Insert button (also disabled)
     const insertBtn = document.createElement("button");
     insertBtn.textContent = "Insert Rows";
     insertBtn.className = "btn btn-sm btn-outline-success";
     insertBtn.disabled = true;
     wrapper.appendChild(insertBtn);
-  
+
     // --- fetch list of databases ---
     // --- fetch list of databases with async/await ---
-// --- fetch list of databases with async/await + error handling ---
-try {
-  const dbRes = await fetch("/drag", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "listDatabases" })
-  });
+    // --- fetch list of databases with async/await + error handling ---
+    try {
+      const dbRes = await fetch("/drag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "listDatabases" }),
+      });
 
-  if (!dbRes.ok) {
-    // Server returned some text error (not JSON)
-    const errText = await dbRes.text();
-    console.error("listDatabases failed:", errText);
-    return;       // stop here
-  }
+      if (!dbRes.ok) {
+        // Server returned some text error (not JSON)
+        const errText = await dbRes.text();
+        console.error("listDatabases failed:", errText);
+        return; // stop here
+      }
 
-  // Now safe to parse JSON
-  const dbs = await dbRes.json();
-  dbs.forEach(db => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = db;
-    dbSelect.appendChild(opt);
-  });
-} catch (err) {
-  console.error("listDatabases failed:", err);
-}
-  
+      // Now safe to parse JSON
+      const dbs = await dbRes.json();
+      dbs.forEach((db) => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = db;
+        dbSelect.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("listDatabases failed:", err);
+    }
+
     // when a database is selected, fetch its tables
     dbSelect.onchange = async () => {
       const db = dbSelect.value;
-      tableSelect.innerHTML = "";  // clear previous options
+      tableSelect.innerHTML = ""; // clear previous options
       tableSelect.disabled = true;
       jsonArea.disabled = true;
       insertBtn.disabled = true;
-  
+
       try {
         const tblRes = await fetch("/drag", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "listTables", database: db })
+          body: JSON.stringify({ action: "listTables", database: db }),
         });
-        
-        console.log("tblRes", tblRes)
+
+        console.log("tblRes", tblRes);
         const tables = await tblRes.json(); // e.g. ["users","orders",...]
-        tables.forEach(t => {
+        tables.forEach((t) => {
           const opt = document.createElement("option");
           opt.value = opt.textContent = t;
           tableSelect.appendChild(opt);
@@ -332,7 +344,7 @@ try {
         console.error("listTables failed:", err);
       }
     };
-  
+
     // on click, build INSERT query and send
     insertBtn.onclick = () => {
       let rows;
@@ -344,28 +356,30 @@ try {
       if (!Array.isArray(rows) || rows.length === 0) {
         return alert("Need at least one row");
       }
-  
+
       const cols = Object.keys(rows[0]);
-      const vals = rows.map(r =>
-        "(" +
-        cols.map(c =>
-          typeof r[c] === "string"
-            ? `'${r[c].replace(/'/g, "\\'")}'`
-            : r[c]
-        ).join(",") +
-        ")"
-      ).join(",");
-  
-      const q = `INSERT INTO ${dbSelect.value}.${tableSelect.value} (${cols.join(
-        ","
-      )}) VALUES ${vals}`;
-      
-      sendQueryToBackend(q)
+      const vals = rows
+        .map(
+          (r) =>
+            "(" +
+            cols
+              .map((c) =>
+                typeof r[c] === "string"
+                  ? `'${r[c].replace(/'/g, "\\'")}'`
+                  : r[c]
+              )
+              .join(",") +
+            ")"
+        )
+        .join(",");
+
+      const q = `INSERT INTO ${dbSelect.value}.${
+        tableSelect.value
+      } (${cols.join(",")}) VALUES ${vals}`;
+
+      sendQueryToBackend(q);
     };
-
-  }
-
-  else if (type === "update") {
+  } else if (type === "update") {
     const title = document.createElement("h5");
     title.textContent = "Update Rows";
     wrapper.appendChild(title);
@@ -411,10 +425,16 @@ try {
 
     // load databases
     try {
-      const dbRes = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listDatabases" }) });
+      const dbRes = await fetch("/drag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "listDatabases" }),
+      });
       const dbs = await dbRes.json();
-      dbs.forEach(db => {
-        const opt = document.createElement("option"); opt.value = db; opt.textContent = db;
+      dbs.forEach((db) => {
+        const opt = document.createElement("option");
+        opt.value = db;
+        opt.textContent = db;
         dbSelect.appendChild(opt);
       });
     } catch {}
@@ -428,10 +448,19 @@ try {
       updateBtn.disabled = true;
       refreshBtn.disabled = true;
       try {
-        const tblRes = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listTables", database: dbSelect.value }) });
+        const tblRes = await fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "listTables",
+            database: dbSelect.value,
+          }),
+        });
         const tables = await tblRes.json();
-        tables.forEach(t => {
-          const opt = document.createElement("option"); opt.value = t; opt.textContent = t;
+        tables.forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
           tableSelect.appendChild(opt);
         });
         if (tables.length) {
@@ -458,7 +487,11 @@ try {
     };
 
     updateBtn.onclick = async () => {
-      const sql = `ALTER TABLE ${dbSelect.value}.${tableSelect.value} UPDATE ${columnInput.value} = ${isNaN(valueInput.value) ? `'${valueInput.value}'` : valueInput.value} WHERE ${whereInput.value}`;
+      const sql = `ALTER TABLE ${dbSelect.value}.${tableSelect.value} UPDATE ${
+        columnInput.value
+      } = ${
+        isNaN(valueInput.value) ? `'${valueInput.value}'` : valueInput.value
+      } WHERE ${whereInput.value}`;
       await sendQueryToBackend(sql);
       // success message
       const outputDiv = document.getElementById("output");
@@ -468,7 +501,7 @@ try {
       outputDiv.prepend(msg);
     };
   }
-  
+
   // DELETE OBJECT
   else if (type === "delete") {
     const title = document.createElement("h5");
@@ -478,10 +511,14 @@ try {
     // Mode selector: Rows, Table, Database, View
     const modeSelect = document.createElement("select");
     modeSelect.className = "form-select mb-2";
-    ["Delete Rows", "Drop Table", "Drop Database", "Drop View"].forEach(optText => {
-      const opt = document.createElement("option"); opt.value = optText; opt.textContent = optText;
-      modeSelect.appendChild(opt);
-    });
+    ["Delete Rows", "Drop Table", "Drop Database", "Drop View"].forEach(
+      (optText) => {
+        const opt = document.createElement("option");
+        opt.value = optText;
+        opt.textContent = optText;
+        modeSelect.appendChild(opt);
+      }
+    );
     wrapper.appendChild(modeSelect);
 
     // Database selector
@@ -513,22 +550,45 @@ try {
     // load databases
     let databases = [];
     try {
-      const dbRes = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listDatabases" }) });
+      const dbRes = await fetch("/drag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "listDatabases" }),
+      });
       databases = await dbRes.json();
-      databases.forEach(db => { const opt = document.createElement("option"); opt.value = db; opt.textContent = db; dbSelect.appendChild(opt); });
+      databases.forEach((db) => {
+        const opt = document.createElement("option");
+        opt.value = db;
+        opt.textContent = db;
+        dbSelect.appendChild(opt);
+      });
     } catch {}
 
     modeSelect.onchange = () => {
       const mode = modeSelect.value;
       execBtn.disabled = false;
-      objSelect.disabled = (mode === "Drop Database");
-      whereInput.disabled = (mode !== "Delete Rows");
+      objSelect.disabled = mode === "Drop Database";
+      whereInput.disabled = mode !== "Delete Rows";
       objSelect.innerHTML = "";
       if (mode !== "Drop Database") {
-        const action = mode === "Delete Rows" || mode === "Drop Table" ? "listTables" : "listViews";
-        fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, database: dbSelect.value }) })
-          .then(r => r.json())
-          .then(list => list.forEach(item => { const o = document.createElement("option"); o.value = item; o.textContent = item; objSelect.appendChild(o); }));
+        const action =
+          mode === "Delete Rows" || mode === "Drop Table"
+            ? "listTables"
+            : "listViews";
+        fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, database: dbSelect.value }),
+        })
+          .then((r) => r.json())
+          .then((list) =>
+            list.forEach((item) => {
+              const o = document.createElement("option");
+              o.value = item;
+              o.textContent = item;
+              objSelect.appendChild(o);
+            })
+          );
         objSelect.disabled = false;
       }
     };
@@ -556,10 +616,7 @@ try {
       msg.textContent = `Executed: ${mode}`;
       outputDiv.prepend(msg);
     };
-
-  }
-
-  else if (type === "read") {
+  } else if (type === "read") {
     const title = document.createElement("h5");
     title.textContent = "Read Data";
     wrapper.appendChild(title);
@@ -567,11 +624,13 @@ try {
     // Action selector (databases, tables, views, table data)
     const actionSelect = document.createElement("select");
     actionSelect.className = "form-select mb-2";
-    ["List Databases", "List Tables", "List Views", "Fetch Table Data"].forEach(optText => {
-      const opt = document.createElement("option");
-      opt.value = opt.textContent = optText;
-      actionSelect.appendChild(opt);
-    });
+    ["List Databases", "List Tables", "List Views", "Fetch Table Data"].forEach(
+      (optText) => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = optText;
+        actionSelect.appendChild(opt);
+      }
+    );
     wrapper.appendChild(actionSelect);
 
     // Database selector
@@ -599,10 +658,10 @@ try {
       const dbRes = await fetch("/drag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "listDatabases" })
+        body: JSON.stringify({ action: "listDatabases" }),
       });
       databases = await dbRes.json();
-      databases.forEach(db => {
+      databases.forEach((db) => {
         const opt = document.createElement("option");
         opt.value = opt.textContent = db;
         dbSelect.appendChild(opt);
@@ -611,25 +670,29 @@ try {
 
     actionSelect.onchange = () => {
       const choice = actionSelect.value;
-      dbSelect.disabled = (choice === "List Databases");
-      objSelect.disabled = (choice !== "Fetch Table Data");
+      dbSelect.disabled = choice === "List Databases";
+      objSelect.disabled = choice !== "Fetch Table Data";
       execBtn.disabled = false;
     };
 
     dbSelect.onchange = async () => {
       const choice = actionSelect.value;
       objSelect.innerHTML = "";
-      if (choice === "List Tables" || choice === "List Views" || choice === "Fetch Table Data") {
+      if (
+        choice === "List Tables" ||
+        choice === "List Views" ||
+        choice === "Fetch Table Data"
+      ) {
         const act = choice === "List Tables" ? "listTables" : "listViews";
         // for data fetch, reuse listTables to populate
-        const action = (choice === "Fetch Table Data") ? "listTables" : act;
+        const action = choice === "Fetch Table Data" ? "listTables" : act;
         const res = await fetch("/drag", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: action, database: dbSelect.value })
+          body: JSON.stringify({ action: action, database: dbSelect.value }),
         });
         const list = await res.json();
-        list.forEach(item => {
+        list.forEach((item) => {
           const opt = document.createElement("option");
           opt.value = opt.textContent = item;
           objSelect.appendChild(opt);
@@ -694,28 +757,39 @@ try {
       const dbRes = await fetch("/drag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "listDatabases" })
+        body: JSON.stringify({ action: "listDatabases" }),
       });
       const dbs = await dbRes.json();
-      dbs.forEach(db => {
-        const opt = document.createElement("option"); opt.value = db; opt.textContent = db;
+      dbs.forEach((db) => {
+        const opt = document.createElement("option");
+        opt.value = db;
+        opt.textContent = db;
         dbSelect.appendChild(opt);
       });
     } catch {}
 
     dbSelect.onchange = async () => {
-      tableSelect.innerHTML = ""; tableSelect.disabled = true;
-      xSelect.innerHTML = ""; xSelect.disabled = true;
-      ySelect.innerHTML = ""; ySelect.disabled = true;
+      tableSelect.innerHTML = "";
+      tableSelect.disabled = true;
+      xSelect.innerHTML = "";
+      xSelect.disabled = true;
+      ySelect.innerHTML = "";
+      ySelect.disabled = true;
       renderBtn.disabled = true;
       try {
         const tblRes = await fetch("/drag", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "listTables", database: dbSelect.value })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "listTables",
+            database: dbSelect.value,
+          }),
         });
         const tables = await tblRes.json();
-        tables.forEach(t => {
-          const opt = document.createElement("option"); opt.value = t; opt.textContent = t;
+        tables.forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
           tableSelect.appendChild(opt);
         });
         if (tables.length) {
@@ -728,58 +802,86 @@ try {
     };
 
     tableSelect.onchange = async () => {
-      xSelect.innerHTML = ""; ySelect.innerHTML = "";
-      xSelect.disabled = true; ySelect.disabled = true; renderBtn.disabled = true;
+      xSelect.innerHTML = "";
+      ySelect.innerHTML = "";
+      xSelect.disabled = true;
+      ySelect.disabled = true;
+      renderBtn.disabled = true;
       // fetch columns via JSON
       const qry = `SELECT * FROM ${dbSelect.value}.${tableSelect.value} LIMIT 1 FORMAT JSON`;
       try {
-        const res = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: qry }) });
+        const res = await fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: qry }),
+        });
         const obj = JSON.parse(await res.text());
         const cols = obj.data?.length ? Object.keys(obj.data[0]) : [];
-        cols.forEach(col => {
-          const optX = document.createElement("option"); optX.value = col; optX.textContent = col; xSelect.appendChild(optX);
-          const optY = document.createElement("option"); optY.value = col; optY.textContent = col; ySelect.appendChild(optY);
+        cols.forEach((col) => {
+          const optX = document.createElement("option");
+          optX.value = col;
+          optX.textContent = col;
+          xSelect.appendChild(optX);
+          const optY = document.createElement("option");
+          optY.value = col;
+          optY.textContent = col;
+          ySelect.appendChild(optY);
         });
         if (cols.length) {
-          xSelect.disabled = false; ySelect.disabled = false; renderBtn.disabled = false;
+          xSelect.disabled = false;
+          ySelect.disabled = false;
+          renderBtn.disabled = false;
         }
       } catch {}
     };
 
-    renderBtn.addEventListener('click', async () => {
+    renderBtn.addEventListener("click", async () => {
       const sql = `SELECT ${xSelect.value}, ${ySelect.value} FROM ${dbSelect.value}.${tableSelect.value} FORMAT JSON`;
       try {
-        const res = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: sql }) });
+        const res = await fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: sql }),
+        });
         const obj = JSON.parse(await res.text());
         const rows = obj.data || [];
-        const labels = rows.map(r => r[xSelect.value]);
-        const values = rows.map(r => Number(r[ySelect.value]));
+        const labels = rows.map((r) => r[xSelect.value]);
+        const values = rows.map((r) => Number(r[ySelect.value]));
         // clear previous chart
         if (chartCanvas.chart) chartCanvas.chart.destroy();
-        chartCanvas.chart = new Chart(chartCanvas.getContext('2d'), {
-          type: 'bar',
+        chartCanvas.chart = new Chart(chartCanvas.getContext("2d"), {
+          type: "bar",
           data: { labels, datasets: [{ label: ySelect.value, data: values }] },
-          options: { responsive: true, scales: { y: { beginAtZero: true } } }
+          options: { responsive: true, scales: { y: { beginAtZero: true } } },
         });
       } catch (err) {
         console.error(err);
       }
     });
-  }
-
-  else if (type === "piechart") {
+  } else if (type === "piechart") {
     const title = document.createElement("h5");
     title.textContent = "Pie Chart";
     wrapper.appendChild(title);
 
     // DB selector
-    const dbSelect = document.createElement("select"); dbSelect.className = "form-select mb-2"; wrapper.appendChild(dbSelect);
+    const dbSelect = document.createElement("select");
+    dbSelect.className = "form-select mb-2";
+    wrapper.appendChild(dbSelect);
     // Table selector
-    const tableSelect = document.createElement("select"); tableSelect.className = "form-select mb-2"; tableSelect.disabled = true; wrapper.appendChild(tableSelect);
+    const tableSelect = document.createElement("select");
+    tableSelect.className = "form-select mb-2";
+    tableSelect.disabled = true;
+    wrapper.appendChild(tableSelect);
     // Label selector (categorical)
-    const labelSelect = document.createElement("select"); labelSelect.className = "form-select mb-2"; labelSelect.disabled = true; wrapper.appendChild(labelSelect);
+    const labelSelect = document.createElement("select");
+    labelSelect.className = "form-select mb-2";
+    labelSelect.disabled = true;
+    wrapper.appendChild(labelSelect);
     // Value selector (numeric)
-    const valueSelect = document.createElement("select"); valueSelect.className = "form-select mb-2"; valueSelect.disabled = true; wrapper.appendChild(valueSelect);
+    const valueSelect = document.createElement("select");
+    valueSelect.className = "form-select mb-2";
+    valueSelect.disabled = true;
+    wrapper.appendChild(valueSelect);
     // Render button
     const renderBtn = document.createElement("button");
     renderBtn.textContent = "Render Pie Chart";
@@ -787,9 +889,8 @@ try {
     renderBtn.disabled = true;
     wrapper.appendChild(renderBtn);
 
-
     const chartCanvas = document.createElement("canvas");
-    chartCanvas.style.maxWidth = "500px";  // constrain size
+    chartCanvas.style.maxWidth = "500px"; // constrain size
     chartCanvas.style.maxHeight = "500px";
     chartCanvas.className = "mt-2";
     wrapper.appendChild(chartCanvas);
@@ -798,24 +899,42 @@ try {
 
     // Load databases
     try {
-      const dbRes = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listDatabases" }) });
+      const dbRes = await fetch("/drag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "listDatabases" }),
+      });
       const dbs = await dbRes.json();
-      dbs.forEach(db => {
-        const opt = document.createElement("option"); opt.value = db; opt.textContent = db;
+      dbs.forEach((db) => {
+        const opt = document.createElement("option");
+        opt.value = db;
+        opt.textContent = db;
         dbSelect.appendChild(opt);
       });
     } catch {}
 
     dbSelect.onchange = async () => {
-      tableSelect.innerHTML = ""; tableSelect.disabled = true;
-      labelSelect.innerHTML = ""; labelSelect.disabled = true;
-      valueSelect.innerHTML = ""; valueSelect.disabled = true;
+      tableSelect.innerHTML = "";
+      tableSelect.disabled = true;
+      labelSelect.innerHTML = "";
+      labelSelect.disabled = true;
+      valueSelect.innerHTML = "";
+      valueSelect.disabled = true;
       renderBtn.disabled = true;
       try {
-        const tblRes = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listTables", database: dbSelect.value }) });
+        const tblRes = await fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "listTables",
+            database: dbSelect.value,
+          }),
+        });
         const tables = await tblRes.json();
-        tables.forEach(t => {
-          const opt = document.createElement("option"); opt.value = t; opt.textContent = t;
+        tables.forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
           tableSelect.appendChild(opt);
         });
         if (tables.length) {
@@ -827,19 +946,34 @@ try {
     };
 
     tableSelect.onchange = async () => {
-      labelSelect.innerHTML = ""; valueSelect.innerHTML = "";
-      labelSelect.disabled = true; valueSelect.disabled = true; renderBtn.disabled = true;
+      labelSelect.innerHTML = "";
+      valueSelect.innerHTML = "";
+      labelSelect.disabled = true;
+      valueSelect.disabled = true;
+      renderBtn.disabled = true;
       const qry = `SELECT * FROM ${dbSelect.value}.${tableSelect.value} LIMIT 1 FORMAT JSON`;
       try {
-        const res = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: qry }) });
+        const res = await fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: qry }),
+        });
         const obj = JSON.parse(await res.text());
         const cols = obj.data?.length ? Object.keys(obj.data[0]) : [];
-        cols.forEach(col => {
-          const optL = document.createElement("option"); optL.value = col; optL.textContent = col; labelSelect.appendChild(optL);
-          const optV = document.createElement("option"); optV.value = col; optV.textContent = col; valueSelect.appendChild(optV);
+        cols.forEach((col) => {
+          const optL = document.createElement("option");
+          optL.value = col;
+          optL.textContent = col;
+          labelSelect.appendChild(optL);
+          const optV = document.createElement("option");
+          optV.value = col;
+          optV.textContent = col;
+          valueSelect.appendChild(optV);
         });
         if (cols.length) {
-          labelSelect.disabled = false; valueSelect.disabled = false; renderBtn.disabled = false;
+          labelSelect.disabled = false;
+          valueSelect.disabled = false;
+          renderBtn.disabled = false;
         }
       } catch {}
     };
@@ -847,23 +981,29 @@ try {
     renderBtn.onclick = async () => {
       const sql = `SELECT ${labelSelect.value}, ${valueSelect.value} FROM ${dbSelect.value}.${tableSelect.value} FORMAT JSON`;
       try {
-        const res = await fetch("/drag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: sql }) });
+        const res = await fetch("/drag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: sql }),
+        });
         const obj = JSON.parse(await res.text());
         const rows = obj.data || [];
-        const labels = rows.map(r => r[labelSelect.value]);
-        const values = rows.map(r => Number(r[valueSelect.value]));
+        const labels = rows.map((r) => r[labelSelect.value]);
+        const values = rows.map((r) => Number(r[valueSelect.value]));
         if (chartCanvas.chart) chartCanvas.chart.destroy();
-        chartCanvas.chart = new Chart(chartCanvas.getContext('2d'), {
-          type: 'pie',
-          data: { labels, datasets: [{ data: values, label: valueSelect.value }] },
-          options: { responsive: true }
+        chartCanvas.chart = new Chart(chartCanvas.getContext("2d"), {
+          type: "pie",
+          data: {
+            labels,
+            datasets: [{ data: values, label: valueSelect.value }],
+          },
+          options: { responsive: true },
         });
       } catch (err) {
         console.error(err);
       }
     };
   }
-
 
   canvas.appendChild(wrapper);
   undoStack.push(wrapper);
@@ -881,7 +1021,7 @@ undoBtn.addEventListener("click", () => {
 
 clearBtn.addEventListener("click", () => {
   // Remove all dropped wrappers
-  undoStack.forEach(node => {
+  undoStack.forEach((node) => {
     if (node.parentNode === canvas) {
       canvas.removeChild(node);
     }

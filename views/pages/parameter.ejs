@@ -1,0 +1,784 @@
+<%- include('../partials/header') %>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <%- include('../partials/nav') %>
+
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content">
+        <nav class="navbar navbar-expand navbar-light mb-4">
+          <div class="container-fluid">
+            <a class="navbar-brand" href="#">Parameterized Query Viewer</a>
+          </div>
+        </nav>
+
+        <section id="selectSection">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label for="dbSelect" class="form-label fw-bold"
+                >Select Database</label
+              >
+              <select id="dbSelect" class="form-select">
+                <option value="">-- Choose Database --</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="tableSelect" class="form-label fw-bold"
+                >Select Table</label
+              >
+              <select id="tableSelect" class="form-select" disabled>
+                <option value="">-- Choose Table --</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Top N Filter -->
+        <section id="topFilterSection" class="mb-4" style="display: none">
+          <label for="topLimit" class="form-label fw-bold">Show Top</label>
+          <select id="topLimit" class="form-select w-25">
+            <option value="10">Top 10</option>
+            <option value="50">Top 50</option>
+            <option value="100">Top 100</option>
+          </select>
+          <button class="btn btn-primary mt-2" id="fetchInfo">
+            Fetch Table Info
+          </button>
+        </section>
+
+        <!-- Table Description -->
+        <section id="describeSection" class="mt-4" style="display: none">
+          <h5>Table Schema</h5>
+          <pre id="schemaOutput" class="bg-light p-3 border rounded"></pre>
+        </section>
+
+        <!-- Table Data -->
+        <section id="tableDataSection" class="mt-4" style="display: none">
+          <h5>Table Data</h5>
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div id="tableData" class="table-responsive"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AI Suggestions -->
+        <section id="aiSuggestionSection" class="mt-4" style="display: none">
+          <h5>Suggestions (Beta)</h5>
+          <div id="aiButtons" class="d-flex flex-wrap gap-2 mt-2"></div>
+        </section>
+
+        <section
+          id="smartUISuggestionSection"
+          class="mt-4"
+          style="display: none"
+        >
+          <h5>Smart UI Components</h5>
+          <div id="smartUIButtons" class="d-flex flex-wrap gap-2 mt-2"></div>
+        </section>
+
+        <section id="chartConfigSection" class="mt-4" style="display: none">
+          <h5>Chart Configuration</h5>
+          <div id="chartConfigUI" class="card p-3 shadow-sm"></div>
+        </section>
+
+        <!-- Parameterized Query Builder -->
+        <!-- Parameterized Query Builder -->
+        <div
+          class="card shadow-sm p-3 mb-4"
+          id="paramQueryBuilderSection"
+          style="display: none"
+        >
+          <h5 class="fw-bold">⚙️ Parameterized Query Builder</h5>
+
+          <!-- toolbar as Bootstrap row with col-auto wrappers -->
+          <div class="row g-2 mb-3">
+            <!-- inside the <div class="row g-2 mb-3"> with your other buttons -->
+            <!-- <button
+              class="btn btn-outline-secondary"
+              onclick="addSelectColumns()"
+            >
+              Select Columns 📑
+            </button> -->
+
+            <div class="col-auto">
+              <button class="btn btn-outline-secondary" onclick="addFilter()">
+                Add Filter ➕
+              </button>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-outline-secondary" onclick="addSort()">
+                Sort By ⬇️
+              </button>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-outline-secondary" onclick="addGroup()">
+                Group By 🧠
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-outline-secondary"
+                onclick="addAggregate()"
+              >
+                Aggregate 🧮
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-outline-secondary"
+                onclick="addDateRange()"
+              >
+                Date Range 📅
+              </button>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-outline-danger" onclick="undoQueryBlock()">
+                Undo ↩️
+              </button>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-outline-dark" onclick="clearQueryBlocks()">
+                Clear ❌
+              </button>
+            </div>
+          </div>
+
+          <!-- area where createDropdown() injects rows -->
+          <div id="queryBuilderArea" class="container-fluid"></div>
+
+          <!-- run button stays below, full width on small -->
+          <div class="mt-3">
+            <button class="btn btn-success w-100" onclick="showQueryResult()">
+              Show Results 🚀
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Query Result -->
+        <section id="aiQueryResultSection" class="mt-4" style="display: none">
+          <h5>Result Canvas</h5>
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div id="aiQueryTable" class="table-responsive"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/public/index.js"></script>
+  <script>
+    function renderStyledTable(rawText) {
+      const lines = rawText.trim().split("\n");
+      if (lines.length < 2) return "<p>No data available.</p>";
+      const headers = lines[0].split("\t");
+      const rows = lines.slice(1).map((line) => line.split("\t"));
+      let html = `<table class="table table-striped table-bordered table-sm align-middle">
+                    <thead class="table-dark"><tr>`;
+      headers.forEach((h) => {
+        html += `<th>${h}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+      rows.forEach((r) => {
+        html += `<tr>`;
+        r.forEach((c) => (html += `<td>${c}</td>`));
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      return html;
+    }
+
+    async function showQueryResult() {
+      const db = document.getElementById("dbSelect").value;
+      const table = document.getElementById("tableSelect").value;
+      const limit = document.getElementById("topLimit").value;
+      if (!db || !table) return alert("Please select both DB and table first.");
+
+      const blocks = queryBlocks.map((container) => {
+        const type = container.querySelector("span").innerText;
+        const selects = Array.from(container.querySelectorAll("select"));
+        const inputs = Array.from(container.querySelectorAll("input"));
+        switch (type) {
+          case "Filter":
+            return { type, column: selects[0].value, value: inputs[0].value };
+          case "Sort By":
+            return { type, column: selects[0].value, order: selects[1].value };
+          case "Group By":
+            return { type, column: selects[0].value };
+          case "Aggregate":
+            return { type, func: selects[0].value, column: selects[1].value };
+          case "Date Range":
+            return { type, range: inputs[0].value };
+          case "Select Columns":
+            // grabs all selected options in that multi-select
+            return {
+              type,
+              columns: Array.from(selects[0].selectedOptions).map(
+                (o) => o.value
+              ),
+            };
+          default:
+            return { type };
+        }
+      });
+
+      const resp = await fetch("/param", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ db, table, blocks, limit }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json();
+        return alert("Error: " + (err.error || resp.statusText));
+      }
+      const { data } = await resp.json();
+      document.getElementById("aiQueryTable").innerHTML =
+        renderStyledTable(data);
+      document.getElementById("aiQueryResultSection").style.display = "block";
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const dbSelect = document.getElementById("dbSelect");
+      const tableSelect = document.getElementById("tableSelect");
+      const fetchInfoBtn = document.getElementById("fetchInfo");
+
+      // Load DBs
+      const dbRes = await fetch("/parameter/dbs");
+      const databases = await dbRes.json();
+      databases.forEach((db) => {
+        const opt = document.createElement("option");
+        opt.value = db;
+        opt.textContent = db;
+        dbSelect.appendChild(opt);
+      });
+
+      dbSelect.addEventListener("change", async () => {
+        tableSelect.innerHTML = '<option value="">-- Choose Table --</option>';
+        tableSelect.disabled = true;
+        const res = await fetch(`/parameter/tables?db=${dbSelect.value}`);
+        const tables = await res.json();
+        tables.forEach((tbl) => {
+          const opt = document.createElement("option");
+          opt.value = tbl;
+          opt.textContent = tbl;
+          tableSelect.appendChild(opt);
+        });
+        tableSelect.disabled = false;
+      });
+
+      tableSelect.addEventListener("change", async () => {
+        document.getElementById("topFilterSection").style.display = "block";
+      });
+
+      fetchInfoBtn.addEventListener("click", async () => {
+        const db = dbSelect.value;
+        const table = tableSelect.value;
+        const limit = document.getElementById("topLimit").value;
+
+        if (!db || !table) return alert("Select DB and Table first.");
+
+        const res = await fetch("/parameter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ db, table, limit }),
+        });
+
+        const { schema, data } = await res.json();
+
+        // Display schema and table
+        document.getElementById("describeSection").style.display = "block";
+        document.getElementById("schemaOutput").textContent = schema;
+
+        document.getElementById("tableDataSection").style.display = "block";
+        const tableHTML = renderStyledTable(data);
+        document.getElementById("tableData").innerHTML = tableHTML;
+
+        // Call AI after rendering table
+        const aiRes = await fetch("/ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ db, table, schema }),
+        });
+
+        // Extract columns for parameterized query builder
+        paramColumns = schema
+          .split("\n")
+          .slice(1)
+          .map((line) => line.split("\t")[0])
+          .filter(Boolean);
+        // Show parameterized query builder section
+        document.getElementById("paramQueryBuilderSection").style.display =
+          "block";
+
+        let suggestions = await aiRes.json();
+        renderAISuggestions(suggestions, db, table, schema);
+      });
+
+      function renderStyledTable(rawText) {
+        console.log(rawText, "rawText");
+        const lines = rawText.trim().split("\n");
+        if (lines.length < 2) return "<p>No data available.</p>";
+
+        const headers = lines[0].split("\t");
+        const rows = lines.slice(1).map((line) => line.split("\t"));
+
+        let html = `<table class="table table-striped table-bordered table-sm align-middle">
+                      <thead class="table-dark"><tr>`;
+        headers.forEach((header) => {
+          html += `<th scope="col">${header}</th>`;
+        });
+        html += `</tr></thead><tbody>`;
+
+        rows.forEach((row) => {
+          html += `<tr>`;
+          row.forEach((cell) => {
+            html += `<td>${cell}</td>`;
+          });
+          html += `</tr>`;
+        });
+        html += `</tbody></table>`;
+        return html;
+      }
+
+      function renderAISuggestions(suggestions, db, table, schema) {
+        const canvas = document.getElementById("aiButtons");
+        canvas.innerHTML = "";
+        document.getElementById("aiSuggestionSection").style.display = "block";
+
+        suggestions.forEach((text) => {
+          const btn = document.createElement("button");
+          btn.className = "btn btn-outline-success";
+          btn.textContent = text;
+          btn.onclick = async () => {
+            const queryRes = await fetch("/ai/query", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: text, db, table, schema }),
+            });
+
+            const queryData = await queryRes.json();
+            const resultHTML = renderStyledTable(queryData.data);
+
+            const resultSection = document.getElementById(
+              "aiQueryResultSection"
+            );
+            resultSection.style.display = "block";
+            document.getElementById("aiQueryTable").innerHTML = resultHTML;
+          };
+
+          canvas.appendChild(btn);
+        });
+
+        renderSmartUIButtons(db, table, schema);
+      }
+
+      async function renderSmartUIButtons(db, table, schema) {
+        const uiCanvas = document.getElementById("smartUIButtons");
+        uiCanvas.innerHTML = "";
+        document.getElementById("smartUISuggestionSection").style.display =
+          "block";
+
+        const chartTypes = [
+          { label: "Histogram", icon: "📊" },
+          { label: "Bar Chart", icon: "📉" },
+          { label: "Pie Chart", icon: "🥧" },
+          { label: "Line Chart", icon: "📈" },
+          { label: "Scatter Plot", icon: "🔬" },
+          { label: "Bubble Map", icon: "🌡️" },
+          { label: "Box Plot", icon: "🗃️" },
+          { label: "Radar Chart", icon: "🎯" },
+        ];
+
+        const columns = schema
+          .split("\n")
+          .slice(1)
+          .map((line) => line.split("\t")[0])
+          .filter(Boolean);
+
+        chartTypes.forEach((chart) => {
+          const btn = document.createElement("button");
+          btn.className = "btn btn-outline-primary";
+          btn.innerHTML = `${chart.icon} ${chart.label}`;
+          btn.onclick = () => {
+            showAxisSelectors(chart.label);
+          };
+          uiCanvas.appendChild(btn);
+        });
+
+        function showAxisSelectors(chartType) {
+          const resultDiv = document.getElementById("chartConfigUI");
+          resultDiv.innerHTML = "";
+          document.getElementById("chartConfigSection").style.display = "block";
+
+          // collect columns from outer scope
+          const columns = schema
+            .split("\n")
+            .slice(1)
+            .map((line) => line.split("\t")[0])
+            .filter(Boolean);
+
+          // form wrapper
+          const form = document.createElement("div");
+          form.className = "mt-3";
+
+          // X-axis selector
+          const xSelect = document.createElement("select");
+          xSelect.className = "form-select mb-2";
+          xSelect.innerHTML =
+            `<option value="">-- Select X-Axis --</option>` +
+            columns.map((c) => `<option value="${c}">${c}</option>`).join("");
+
+          // Y-axis selector (not needed for histogram or heatmap X axis only)
+          const ySelect = document.createElement("select");
+          ySelect.className = "form-select mb-2";
+          ySelect.innerHTML =
+            `<option value="">-- Select Y-Axis --</option>` +
+            columns.map((c) => `<option value="${c}">${c}</option>`).join("");
+
+          form.appendChild(xSelect);
+          form.appendChild(ySelect);
+
+          // optional aggregation for heatmap
+          let aggSelect = null;
+          if (chartType === "Heatmap") {
+            aggSelect = document.createElement("select");
+            aggSelect.className = "form-select mb-2";
+            aggSelect.innerHTML = `
+      <option value="">-- Select Aggregation --</option>
+      <option value="count">COUNT</option>
+      <option value="sum">SUM</option>
+      <option value="avg">AVG</option>
+      <option value="min">MIN</option>
+      <option value="max">MAX</option>`;
+            form.appendChild(aggSelect);
+          }
+
+          // Run button
+          const runBtn = document.createElement("button");
+          runBtn.className = "btn btn-success";
+          runBtn.innerText = "Run";
+
+          runBtn.onclick = async () => {
+            const xAxis = xSelect.value;
+            const yAxis = ySelect.value;
+            const aggregation = aggSelect?.value;
+
+            if (
+              !xAxis ||
+              (chartType !== "Histogram" && chartType !== "Pie Chart" && !yAxis)
+            ) {
+              return alert("Please select required axes");
+            }
+
+            // call backend
+            const resp = await fetch("/chart", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chartType,
+                db,
+                table,
+                xAxis,
+                yAxis,
+                aggregation,
+              }),
+            });
+
+            if (!resp.ok) {
+              const err = await resp.json();
+              return alert("Error: " + err.error);
+            }
+
+            const chartConfig = await resp.json();
+
+            // prepare canvas
+            const outputDiv = document.getElementById("aiQueryTable");
+            outputDiv.innerHTML = `<canvas id="chartCanvas"></canvas>`;
+            const ctx = document.getElementById("chartCanvas").getContext("2d");
+
+            // destroy old chart if exists
+            if (window.myChart) window.myChart.destroy();
+
+            // render new
+            window.myChart = new Chart(ctx, chartConfig);
+
+            // show chart area
+            document.getElementById("aiQueryResultSection").style.display =
+              "block";
+          };
+
+          form.appendChild(runBtn);
+          resultDiv.appendChild(form);
+        }
+      }
+    });
+
+    let queryBlocks = [];
+    let paramColumns = [];
+
+    function createDropdown(label, controls) {
+      // wrapper row
+      const row = document.createElement("div");
+      row.className = "row mb-2 align-items-center";
+
+      // badge column
+      const tagCol = document.createElement("div");
+      tagCol.className = "col-auto";
+      const tag = document.createElement("span");
+      tag.className = "badge bg-primary";
+      tag.innerText = label;
+      tagCol.appendChild(tag);
+      row.appendChild(tagCol);
+
+      // for each control, give it a col
+      controls.forEach((ctrl) => {
+        const col = document.createElement("div");
+        col.className = "col";
+        // make inputs a bit narrower
+        if (ctrl.tagName === "INPUT") ctrl.classList.add("w-100");
+        col.appendChild(ctrl);
+        row.appendChild(col);
+      });
+
+      document.getElementById("queryBuilderArea").appendChild(row);
+      queryBlocks.push(row);
+    }
+
+    function addFilter() {
+      const col = document.createElement("select");
+      col.className = "form-select";
+      col.innerHTML =
+        `<option value="">-- Column --</option>` +
+        paramColumns.map((c) => `<option>${c}</option>`).join("");
+      const val = document.createElement("input");
+      val.className = "form-control";
+      val.placeholder = "Value";
+      createDropdown("Filter", [col, val]);
+    }
+
+    function addSort() {
+      const col = document.createElement("select");
+      col.className = "form-select";
+      col.innerHTML =
+        `<option value="">-- Column --</option>` +
+        paramColumns.map((c) => `<option>${c}</option>`).join("");
+      const order = document.createElement("select");
+      order.className = "form-select";
+      order.innerHTML = `
+        <option value="ASC">ASC</option>
+        <option value="DESC">DESC</option>`;
+      createDropdown("Sort By", [col, order]);
+    }
+
+    function addGroup() {
+      const col = document.createElement("select");
+      col.className = "form-select";
+      col.innerHTML =
+        `<option value="">-- Column --</option>` +
+        paramColumns.map((c) => `<option>${c}</option>`).join("");
+      createDropdown("Group By", [col]);
+    }
+
+    function addSelectColumns() {
+      // build a multi‐select of available columns
+      const select = document.createElement("select");
+      select.className = "form-select";
+      select.multiple = true; // allow multiple
+      select.size = Math.min(paramColumns.length, 6); // show up to 6 rows
+      select.innerHTML = paramColumns
+        .map((c) => `<option value="${c}">${c}</option>`)
+        .join("");
+
+      // wrap it in the same layout as your other controls
+      createDropdown("Select Columns", [select]);
+    }
+
+    function addAggregate() {
+      const func = document.createElement("select");
+      func.className = "form-select";
+      func.innerHTML = `
+        <option value="">-- Function --</option>
+        <option value="COUNT">COUNT</option>
+        <option value="SUM">SUM</option>
+        <option value="AVG">AVG</option>
+        <option value="MIN">MIN</option>
+        <option value="MAX">MAX</option>`;
+      const col = document.createElement("select");
+      col.className = "form-select";
+      col.innerHTML =
+        `<option value="">-- Column --</option>` +
+        paramColumns.map((c) => `<option>${c}</option>`).join("");
+      createDropdown("Aggregate", [func, col]);
+    }
+
+    function addDateRange() {
+      // 1) Build your dropdown for the date‐column as in other blocks
+      const col = document.createElement("select");
+      col.className = "form-select me-2";
+      col.innerHTML =
+        `<option value="">-- Your Date Column --</option>` +
+        paramColumns.map((c) => `<option value="${c}">${c}</option>`).join("");
+
+      // 2) Start and end date inputs
+      const startInput = document.createElement("input");
+      startInput.type = "date";
+      startInput.className = "form-control me-2";
+
+      const endInput = document.createElement("input");
+      endInput.type = "date";
+      endInput.className = "form-control me-2";
+
+      // 3) Optional presets dropdown
+      const preset = document.createElement("select");
+      preset.className = "form-select";
+      preset.innerHTML = `
+    <option value="">Presets</option>
+    <option value="7">Last 7 days</option>
+    <option value="30">Last 30 days</option>
+    <option value="90">Last 90 days</option>`;
+      preset.onchange = () => {
+        const days = parseInt(preset.value, 10);
+        if (!days) return;
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - days + 1);
+        const fmt = (d) => d.toISOString().slice(0, 10);
+        startInput.value = fmt(start);
+        endInput.value = fmt(end);
+      };
+
+      // 4) Wrap them in a row, just like createDropdown does:
+      const row = document.createElement("div");
+      row.className = "row mb-2 align-items-center";
+
+      // Label
+      const tagCol = document.createElement("div");
+      tagCol.className = "col-auto";
+      const tag = document.createElement("span");
+      tag.className = "badge bg-warning text-dark";
+      tag.innerText = "Date Range";
+      tagCol.appendChild(tag);
+      row.appendChild(tagCol);
+
+      // Column chooser
+      const colCol = document.createElement("div");
+      colCol.className = "col-auto";
+      colCol.appendChild(col);
+      row.appendChild(colCol);
+
+      // Start date
+      const startCol = document.createElement("div");
+      startCol.className = "col";
+      startCol.appendChild(startInput);
+      row.appendChild(startCol);
+
+      // End date
+      const endCol = document.createElement("div");
+      endCol.className = "col";
+      endCol.appendChild(endInput);
+      row.appendChild(endCol);
+
+      // Preset
+      const presetCol = document.createElement("div");
+      presetCol.className = "col-auto";
+      presetCol.appendChild(preset);
+      row.appendChild(presetCol);
+
+      // 5) Finally append and track
+      document.getElementById("queryBuilderArea").appendChild(row);
+      queryBlocks.push(row);
+    }
+
+    function undoQueryBlock() {
+      const last = queryBlocks.pop();
+      if (last) last.remove();
+    }
+
+    function clearQueryBlocks() {
+      queryBlocks.forEach((el) => el.remove());
+      queryBlocks = [];
+    }
+
+    async function showQueryResult() {
+      // grab the selected database/table/limit
+      const db = document.getElementById("dbSelect").value;
+      const table = document.getElementById("tableSelect").value;
+      const limit = document.getElementById("topLimit").value;
+
+      if (!db || !table) {
+        return alert("Please select both database and table first.");
+      }
+
+      // turn each queryBlock container into a { type, ... } object
+      const blocks = queryBlocks.map((container) => {
+        const type = container.querySelector("span").innerText;
+        const selects = Array.from(container.querySelectorAll("select"));
+        const inputs = Array.from(container.querySelectorAll("input"));
+
+        switch (type) {
+          case "Filter":
+            return { type, column: selects[0].value, value: inputs[0].value };
+
+          case "Sort By":
+            return { type, column: selects[0].value, order: selects[1].value };
+
+          case "Group By":
+            return { type, column: selects[0].value };
+
+          case "Aggregate":
+            return { type, func: selects[0].value, column: selects[1].value };
+
+          case "Date Range":
+            // ← replace your old Date Range case with the snippet below
+            const column = selects[0].value; // the first dropdown you injected
+            const start = inputs[0].value; // the start‐date <input>
+            const end = inputs[1].value; // the end‐date   <input>
+            if (!column || !start || !end) {
+              alert("Please choose a column AND both start & end dates");
+              throw new Error("Incomplete Date Range");
+            }
+            return { type, column, start, end };
+
+          default:
+            return { type };
+        }
+      });
+
+      // ** new validation for Date Range **
+      for (const b of blocks) {
+        if (b.type === "Date Range") {
+          if (!b.start || !b.end) {
+            return alert(
+              "Please select both a start date and an end date for your Date Range."
+            );
+          }
+        }
+      }
+
+      try {
+        const resp = await fetch("/param", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ db, table, blocks, limit }),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          return console.error("Error: " + (err.error || resp.statusText));
+        }
+
+        const { data } = await resp.json();
+        // render as before
+        document.getElementById("aiQueryResultSection").style.display = "block";
+        document.getElementById("aiQueryTable").innerHTML =
+          renderStyledTable(data);
+      } catch (e) {
+        console.error("showQueryResult error", e);
+        alert("Something went wrong: " + e.message);
+      }
+    }
+  </script>
+</body>
